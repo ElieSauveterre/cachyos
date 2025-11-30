@@ -1,11 +1,19 @@
 #!/bin/bash
 
 echo -e "\e[32m\nInstall all\e[0m"
-git config --global user.email "contact@eliesauveterre.com"
-git config --global user.name "Elie"
-
 echo -e "\e[32m\nPackage repo refresh\e[0m"
 sudo pacman -Syy
+echo -e "\e[32m\nFull upgrade\e[0m"
+sudo pacman -Syu
+mkdir Workspace -p
+
+if ! pacman -Q "git" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall git\e[0m"
+    sudo pacman -S --noconfirm --needed git
+    git config --global user.email "contact@eliesauveterre.com"
+    git config --global user.name "Elie"
+fi
 
 if ! pacman -Q "cachyos-gaming-meta" &>/dev/null; then
 
@@ -37,7 +45,6 @@ if ! pacman -Q "brave-bin" &>/dev/null; then
     sudo pacman -S --noconfirm --needed brave-bin
 fi
 
-
 if ! pacman -Q "flatpak" &>/dev/null; then
 
     echo -e "\e[32m\nInstall flatpak\e[0m"
@@ -56,11 +63,32 @@ fi
 if ! pacman -Q "lenovolegionlinux-git" &>/dev/null; then
 
     echo -e "\e[32m\nInstall Legion Linux\e[0m"
-    sudo pacman -S --noconfirm --needed base-devel linux-headers dkms
-    paru -S --review lenovolegionlinux-git
-    paru -S lenovolegionlinux-dkms-git
-    sudo cp -R /usr/share/legion_linux /etc/legion_linux
-    sudo dkms install lenovolegionlinux/1.0.0
+    sudo pacman -S --noconfirm --needed base-devel dkms linux-headers
+    sudo pacman -S --noconfirm --needed linux-cachyos-headers
+    sudo pacman -S --needed base-devel git dkms lm_sensors dmidecode python-pyqt6 python-yaml python-argcomplete python-darkdetect openssl mokutil
+    cd Workspace
+    git clone https://github.com/johnfanv2/LenovoLegionLinux.git
+    cd LenovoLegionLinux
+    git checkout 1952cd6f0a7730358209577a0ea85dcfb875240b
+    cd kernel_module
+    LLVM=1 make
+    sudo LLVM=1 make install
+    sudo LLVM=1 make reloadmodule
+    cd ..
+    # DKMS install to avoid patching kernel after each update
+    sudo mkdir -p /usr/src/LenovoLegionLinux-1.0.0
+    sudo cp ./kernel_module/* /usr/src/LenovoLegionLinux-1.0.0 -r
+    sudo dkms add -m LenovoLegionLinux -v 1.0.0
+    sudo dkms build -m LenovoLegionLinux -v 1.0.0
+    cd ..
+    sudo su
+    sudo tee /usr/local/bin/lll >/dev/null << 'EOF'
+#!/bin/bash
+cd /home/elie/Workspace/LenovoLegionLinux
+exec python python/legion_linux/legion_linux/legion_gui.py
+EOF
+    exit
+    sudo chmod +x /usr/local/bin/lll
 fi
 
 if ! pacman -Q "wivrn-dashboard" &>/dev/null; then
