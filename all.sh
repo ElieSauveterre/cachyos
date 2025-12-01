@@ -13,6 +13,7 @@ if ! pacman -Q "git" &>/dev/null; then
     sudo pacman -S --noconfirm --needed git
     git config --global user.email "contact@eliesauveterre.com"
     git config --global user.name "Elie"
+    git config --global credential.helper store
 fi
 
 if ! pacman -Q "cachyos-gaming-meta" &>/dev/null; then
@@ -60,10 +61,11 @@ if ! pacman -Q "anydesk-bin" &>/dev/null; then
     paru -S --review anydesk-bin
 fi
 
-if ! pacman -Q "lenovolegionlinux-git" &>/dev/null; then
+if [ ! -f "/usr/local/bin/lll" ]; then
 
+    # https://github.com/johnfanv2/LenovoLegionLinux
     echo -e "\e[32m\nInstall Legion Linux\e[0m"
-    sudo pacman -S --noconfirm --needed base-devel dkms linux-headers
+sudo pacman -S --noconfirm --needed base-devel dkms linux-headers
     sudo pacman -S --noconfirm --needed linux-cachyos-headers
     sudo pacman -S --needed base-devel git dkms lm_sensors dmidecode python-pyqt6 python-yaml python-argcomplete python-darkdetect openssl mokutil
     cd Workspace
@@ -106,4 +108,24 @@ if ! pacman -Q "wivrn-dashboard" &>/dev/null; then
     sudo pacman -S mangohud
     # On each Steam games, set launch options to:
     # PROTON_USE_NTSYNC=1 VR_OVERRIDE=/home/elie/.local/share/xrizer %command%
+fi
+
+if ! pacman -Q "lact" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall lact - GPU monitor & OC\e[0m"
+    sudo pacman -S --noconfirm --needed lact
+    sudo systemctl enable --now lactd
+fi
+
+if ! flatpak list --app | grep -q "com.getpostman.Postman"; then
+
+    echo -e "\e[32m\nInstall postman\e[0m"
+    sudo flatpak install flathub com.getpostman.Postman
+
+fi
+
+if ! pacman -Q "thunderbird" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall thunderbird\e[0m"
+    sudo pacman -S --noconfirm --needed thunderbird
 fi
