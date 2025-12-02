@@ -124,8 +124,28 @@ if ! flatpak list --app | grep -q "com.getpostman.Postman"; then
 
 fi
 
-if ! pacman -Q "thunderbird" &>/dev/null; then
+if ! pacman -Q "cursor-bin" &>/dev/null; then
 
-    echo -e "\e[32m\nInstall thunderbird\e[0m"
-    sudo pacman -S --noconfirm --needed thunderbird
+    echo -e "\e[32m\nInstall cursor\e[0m"
+    paru -S --review cursor-bin
 fi
+
+if ! pacman -Q "docker" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall docker\e[0m"
+    sudo pacman -S --noconfirm --needed docker docker-compose docker-buildx
+    sudo mkdir -p /etc/docker
+    sudo touch /etc/docker/daemon.json
+    printf '{\n  "features": { "buildkit": true },\n  "storage-driver": "btrfs"\n}\n' | sudo tee /etc/docker/daemon.json > /dev/null
+    sudo systemctl enable --now docker.service
+    sudo usermod -aG docker $USER
+    newgrp docker
+fi
+
+if ! pacman -Q "ddev-bin" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall ddev\e[0m"
+    paru -S --review ddev-bin
+    mkcert -install
+fi
+
