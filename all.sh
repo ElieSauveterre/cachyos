@@ -10,7 +10,8 @@ mkdir Workspace -p
 if ! pacman -Q "git" &>/dev/null; then
 
     echo -e "\e[32m\nInstall git\e[0m"
-    sudo pacman -S --noconfirm --needed git
+    sudo pacman -S --noconfirm --needed git git-lfs
+    git lfs install
     git config --global user.email "contact@eliesauveterre.com"
     git config --global user.name "Elie"
     git config --global credential.helper store
@@ -149,3 +150,39 @@ if ! pacman -Q "ddev-bin" &>/dev/null; then
     mkcert -install
 fi
 
+if ! pacman -Q "android-studio" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall android\e[0m"
+    paru -S --review android-studio
+    set -x ANDROID_SDK_VERSION "11076708"
+    set -x ANDROID_BUILD_TOOLS_VERSION 35.0.0
+    set -x ANDROID_APIS "android-34"
+    mkdir -p $HOME/Android/Sdk
+    wget https://dl.google.com/android/repository/commandlinetools-linux-{$ANDROID_SDK_VERSION}_latest.zip
+    unzip commandlinetools-linux-{$ANDROID_SDK_VERSION}_latest.zip -d $HOME/Android/Sdk/cmdline-tools
+    mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+    rm commandlinetools-linux-{$ANDROID_SDK_VERSION}_latest.zip
+    set -Ux ANDROID_SDK_ROOT $HOME/Android/Sdk
+    set -U fish_user_paths $ANDROID_SDK_ROOT/cmdline-tools/latest/bin $fish_user_paths
+    set -U fish_user_paths $ANDROID_SDK_ROOT/platform-tools $fish_user_paths
+    #
+    echo -e "\e[32m\nInstall Android SDKs\e[0m"
+    yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
+    sdkmanager "cmdline-tools;latest" --sdk_root=$ANDROID_HOME
+    sdkmanager "build-tools;$ANDROID_BUILD_TOOLS_VERSION" --sdk_root=$ANDROID_HOME
+    sdkmanager "platform-tools" --sdk_root=$ANDROID_HOME
+    sdkmanager "platforms;$ANDROID_APIS" --sdk_root=$ANDROID_HOME
+    sdkmanager "extras;android;m2repository" --sdk_root=$ANDROID_HOME
+    sdkmanager "extras;google;m2repository" --sdk_root=$ANDROID_HOME
+    #
+    echo -e "\e[32m\nInstall JAVA\e[0m"
+    sudo pacman -S --noconfirm --needed jdk17-openjdk
+    set -Ux JAVA_HOME /usr/lib/jvm/java-17-openjdk
+    set -U fish_user_paths $JAVA_HOME/bin $fish_user_paths
+fi
+
+if ! flatpak list --app | grep -q "io.beekeeperstudio.Studio"; then
+
+    echo -e "\e[32m\nInstall beekeeperstudio\e[0m"
+    sudo flatpak install flathub io.beekeeperstudio.Studio
+fi
