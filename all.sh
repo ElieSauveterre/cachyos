@@ -5,6 +5,7 @@ echo -e "\e[32m\nPackage repo refresh\e[0m"
 sudo pacman -Syy
 echo -e "\e[32m\nFull upgrade\e[0m"
 sudo pacman -Syu
+paru -Sua --review
 mkdir Workspace -p
 
 if ! pacman -Q "git" &>/dev/null; then
@@ -129,6 +130,7 @@ if ! pacman -Q "cursor-bin" &>/dev/null; then
 
     echo -e "\e[32m\nInstall cursor\e[0m"
     paru -S --review cursor-bin
+    sudo chown -R $USER:$USER /usr/share/cursor # Needs to be after first launch??
 fi
 
 if ! pacman -Q "docker" &>/dev/null; then
@@ -148,6 +150,57 @@ if ! pacman -Q "ddev-bin" &>/dev/null; then
     echo -e "\e[32m\nInstall ddev\e[0m"
     paru -S --review ddev-bin
     mkcert -install
+    mkdir -p ~/.local/bin
+    cat << 'EOF' > ~/.local/bin/php
+#!/usr/bin/env bash
+
+# Host project root (where you run the command from)
+HOST_ROOT="$(pwd)"
+
+# Project root inside DDEV container
+CONTAINER_ROOT="/var/www/html"
+
+# Arguments to forward to php (minus -r and its script)
+args=()
+
+use_script_file=false
+script_content=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -r)
+      # Next argument is the inline PHP script
+      use_script_file=true
+      shift
+      # Rewrite host paths in the script to container paths
+      script_content="${1//$HOST_ROOT/$CONTAINER_ROOT}"
+      shift
+      ;;
+    *)
+      # Rewrite host paths in normal args too (e.g. file paths)
+      args+=( "${1//$HOST_ROOT/$CONTAINER_ROOT}" )
+      shift
+      ;;
+  esac
+done
+
+if $use_script_file; then
+  # Write the script to a temp file under the project
+  host_script="${HOST_ROOT}/.vscode-laravel-intellisense.php"
+  printf "%s" "$script_content" > "$host_script"
+
+  # Translate that path for inside the container
+  container_script="${host_script//$HOST_ROOT/$CONTAINER_ROOT}"
+
+  # Run PHP in the DDEV container, pointing at the file (no -r anymore)
+  ddev exec php "${args[@]}" "$container_script"
+else
+  # Normal usage, no inline script
+  ddev exec php "${args[@]}"
+fi
+EOF
+    chmod +x ~/.local/bin/php
+    set -U fish_user_paths ~/.local/bin $fish_user_paths
 fi
 
 if ! pacman -Q "android-studio" &>/dev/null; then
@@ -181,8 +234,14 @@ if ! pacman -Q "android-studio" &>/dev/null; then
     set -U fish_user_paths $JAVA_HOME/bin $fish_user_paths
 fi
 
-if ! flatpak list --app | grep -q "io.beekeeperstudio.Studio"; then
+if ! flatpak list --app | grep -q "io.dbeaver.DBeaverCommunity"; then
 
-    echo -e "\e[32m\nInstall beekeeperstudio\e[0m"
-    sudo flatpak install flathub io.beekeeperstudio.Studio
+    echo -e "\e[32m\nInstall DBeaver\e[0m"
+    sudo flatpak install flathub io.dbeaver.DBeaverCommunity
+fi
+
+if ! flatpak list --app | grep -q "com.github.IsmaelMartinez.teams_for_linux"; then
+
+    echo -e "\e[32m\nInstall teams\e[0m"
+    sudo flatpak install flathub com.github.IsmaelMartinez.teams_for_linux
 fi
