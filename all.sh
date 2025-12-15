@@ -231,6 +231,7 @@ if ! pacman -Q "android-studio" &>/dev/null; then
     echo -e "\e[32m\nInstall JAVA\e[0m"
     sudo pacman -S --noconfirm --needed jdk17-openjdk
     set -Ux JAVA_HOME /usr/lib/jvm/java-17-openjdk
+    set -Ux ANDROID_HOME $HOME/Android/Sdk
     set -U fish_user_paths $JAVA_HOME/bin $fish_user_paths
 fi
 
@@ -244,4 +245,20 @@ if ! flatpak list --app | grep -q "com.github.IsmaelMartinez.teams_for_linux"; t
 
     echo -e "\e[32m\nInstall teams\e[0m"
     sudo flatpak install flathub com.github.IsmaelMartinez.teams_for_linux
+fi
+
+
+if ! pacman -Q "mullvad-vpn" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall mullvad-vpn & OC\e[0m"
+    sudo pacman -S --noconfirm --needed mullvad-vpn
+    sudo systemctl enable --now mullvad-daemon
+fi
+
+if ! command -v mise &>/dev/null; then
+    curl https://mise.run | sh
+    echo '~/.local/bin/mise activate fish | source' >> ~/.config/fish/config.fish
+    mise use node@14
+    mise use --global node@20
+    corepack enable # For yarn
 fi
