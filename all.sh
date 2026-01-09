@@ -3,10 +3,10 @@
 echo -e "\e[32m\nInstall all\e[0m"
 echo -e "\e[32m\nPackage repo refresh\e[0m"
 sudo pacman -Syy
-echo -e "\e[32m\nFull upgrade\e[0m"
-sudo pacman -Syu
-paru -Sua --review
-mkdir Workspace -p
+#echo -e "\e[32m\nFull upgrade\e[0m"
+#sudo pacman -Syu
+#paru -Sua --review
+mkdir ~/Workspace -p
 
 if ! pacman -Q "git" &>/dev/null; then
 
@@ -259,6 +259,14 @@ if ! command -v mise &>/dev/null; then
     curl https://mise.run | sh
     echo '~/.local/bin/mise activate fish | source' >> ~/.config/fish/config.fish
     mise use node@14
+    npm i -g @ionic/cli@6.12.4
     mise use --global node@20
     corepack enable # For yarn
+fi
+
+
+if ! pacman -Q "chezmoi" &>/dev/null; then
+
+    echo -e "\e[32m\nInstall chezmoi\e[0m"
+    sudo pacman -S --noconfirm --needed chezmoi
 fi
